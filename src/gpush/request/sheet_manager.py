@@ -1,6 +1,7 @@
 import logging
-from typing import Any, Callable, Optional, List
 from functools import wraps
+from typing import Any, Callable, List, Optional
+
 from googleapiclient.discovery import Resource
 
 logger = logging.getLogger(__name__)
@@ -24,7 +25,11 @@ def error_handler(func: Callable[..., Any]) -> Callable[..., Any]:
 
 
 @error_handler
-def find_file(drive_service: Resource, folder_id: str, file_name: str) -> Optional[str]:
+def find_file(
+    drive_service: Resource,
+    folder_id: str,
+    file_name: str,
+) -> Optional[str]:
     """
     Search for a file with a specific name in a given Google Drive folder.
 
@@ -60,7 +65,11 @@ def find_file(drive_service: Resource, folder_id: str, file_name: str) -> Option
 
 
 @error_handler
-def create_google_sheet(drive_service: Resource, folder_id: str, file_name: str) -> str:
+def create_google_sheet(
+    drive_service: Resource,
+    folder_id: str,
+    file_name: str,
+) -> str:
     """
     Create a new Google Sheet in the specified folder.
 
@@ -84,7 +93,14 @@ def create_google_sheet(drive_service: Resource, folder_id: str, file_name: str)
         "mimeType": "application/vnd.google-apps.spreadsheet",
         "parents": [folder_id],
     }
-    file = drive_service.files().create(body=file_metadata, fields="id").execute()
+    file = (
+        drive_service.files()
+        .create(
+            body=file_metadata,
+            fields="id",
+        )
+        .execute()
+    )
     logger.info(f"Created new Google Sheets File ID: {file.get('id')}")
 
     return file.get("id")
@@ -117,13 +133,18 @@ def upload_data_to_sheet(
         None
 
     Raises:
-        GoogleAccessApiError: If an error occurs while making the API request.
+        GoogleApiAccessError: If an error occurs while making the API request.
     """
     body = {"values": data}
     result = (
         sheets_service.spreadsheets()
         .values()
-        .update(spreadsheetId=sheet_id, range=range_, valueInputOption="RAW", body=body)
+        .update(
+            spreadsheetId=sheet_id,
+            range=range_,
+            valueInputOption="RAW",
+            body=body,
+        )
         .execute()
     )
     logger.info(f"{result.get('updatedCells')} cells updated.")

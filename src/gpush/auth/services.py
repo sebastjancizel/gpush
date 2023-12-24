@@ -1,12 +1,12 @@
-from enum import Enum
-
-from googleapiclient.discovery import build, Resource
 import logging
 from contextlib import contextmanager
+from enum import Enum
+
+from googleapiclient.discovery import Resource, build
 
 
 @contextmanager
-def _temp_log_level(level):
+def _temp_log_level(level) -> None:
     logger = logging.getLogger()
     old_level = logger.getEffectiveLevel()
     logger.setLevel(level)
@@ -22,7 +22,7 @@ class ServiceType(Enum):
 
 
 class ServicesBuilder:
-    def __init__(self, credentials) -> None:
+    def __init__(self, credentials: str) -> None:
         self.credentials = credentials
 
     def build(self, service_type: ServiceType) -> Resource:
