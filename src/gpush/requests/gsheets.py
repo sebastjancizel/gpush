@@ -57,7 +57,7 @@ def upload_data_to_spreadsheet(
         sheets_service (Resource): The Google Sheets API service instance.
         sheet_id (str): The ID of the Google Sheet to update.
         data (List[List[Any]]): The data to upload. Each inner list represents a row of data.
-        range_ (str, optional): The A1 notation of the values to update. Defaults to "Sheet1".
+        sheet (str, optional): The A1 notation of the values to update. Defaults to "Sheet1".
 
     Example:
         upload_data_to_sheet(sheets_service, "123456", [["Name", "Age"], ["John Doe", 30], ["Jane Doe", 25]], "Sheet1")
