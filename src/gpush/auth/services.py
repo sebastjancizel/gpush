@@ -1,12 +1,14 @@
 import logging
 from contextlib import contextmanager
-from enum import Enum
+from typing import Any, Generator, Optional
 
-from googleapiclient.discovery import Resource, build
+from googleapiclient.discovery import build
+
+from gpush.auth.authenticator import authenticate_service_account
 
 
 @contextmanager
-def _temp_log_level(level) -> None:
+def _temp_log_level(level: Any) -> Generator:
     logger = logging.getLogger()
     old_level = logger.getEffectiveLevel()
     logger.setLevel(level)
@@ -16,21 +18,9 @@ def _temp_log_level(level) -> None:
         logger.setLevel(old_level)
 
 
-class ServiceType(Enum):
-    Drive = "drive"
-    Sheets = "sheets"
-
-
-class ServicesBuilder:
-    def __init__(self, credentials: str) -> None:
-        self.credentials = credentials
-
-    def build(self, service_type: ServiceType) -> Resource:
+class Services:
+    def __init__(self, service_account_path: Optional[str] = None) -> None:
+        self.credentials = authenticate_service_account(service_account_path)
         with _temp_log_level(logging.ERROR):
-            match service_type:
-                case ServiceType.Drive:
-                    return build("drive", "v3", credentials=self.credentials)
-                case ServiceType.Sheets:
-                    return build("sheets", "v4", credentials=self.credentials)
-                case _:
-                    raise ValueError(f"Invalid service type: {service_type}")
+            self.drive = build("drive", "v3", credentials=self.credentials)
+            self.sheets = build("sheets", "v4", credentials=self.credentials)

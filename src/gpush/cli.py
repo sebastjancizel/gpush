@@ -1,15 +1,13 @@
-import csv
 import logging
 import os
 from argparse import ArgumentParser, Namespace
+from dataclasses import dataclass
 
 from rich.logging import RichHandler
 from rich.traceback import install as install_rich_traceback
 
-from gpush.auth import authenticate_service_account
-from gpush.auth.services import ServicesBuilder, ServiceType
-from gpush.requests.gdrive import create_google_sheet, find_file
-from gpush.requests.gsheets import upload_data_to_sheet
+from gpush.auth.services import Services
+from gpush.handlers import Ext, upload_file
 
 # Set up logging and error handling
 install_rich_traceback()
@@ -19,14 +17,18 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-# Global Variables
-SERVICE_ACCOUNT_FILE = os.getenv("SERVICE_ACCOUNT_FILE")
-FOLDER_ID = os.getenv("FOLDER_ID")
-
 # ---- CLI ----
 # The functions defined in this section are wrappers around the main Python
 # API allowing them to be called directly from the terminal as a CLI
 # executable/script.
+
+
+@dataclass
+class FileDetails:
+    path: str
+    name: str
+    sheet: str
+    ext: Ext
 
 
 def parse_args() -> Namespace:
@@ -47,47 +49,40 @@ def parse_args() -> Namespace:
         "--name",
         "-n",
         type=str,
-        help="Name of the Google Sheet.",
+        help="Desired name of the upload. Defaults to the name of the file",
         required=False,
     )
 
-    args = parser.parse_args()
-    if args.name is None:
-        args.name = os.path.basename(args.path).split(".")[0]
+    parser.add_argument(
+        "--sheet",
+        "-s",
+        type=str,
+        help="Name of the specific sheet within the Google Sheet. Only applicable to spreadsheets.",
+        required=False,
+        default="Sheet1",  # Default sheet name
+    )
 
-    return args
+    args = parser.parse_args()
+    base, ext = os.path.splitext(os.path.basename(args.path))
+
+    file = FileDetails(
+        path=args.path,
+        name=args.name or base,
+        ext=Ext.from_string(ext),
+        sheet=args.sheet,
+    )
+
+    return file
 
 
 def main():
-    args = parse_args()
-    file_name = args.name
+    file = parse_args()
+    logger.info(f"Uploading {file.path} to Google Drive/Sheets as {file.name}...")
 
-    """Main function to handle the Google Sheets operations."""
-    scopes = [
-        "https://www.googleapis.com/auth/drive",
-        "https://www.googleapis.com/auth/spreadsheets",
-    ]
-    # Authenticate the service account
-    credentials = authenticate_service_account(SERVICE_ACCOUNT_FILE, scopes)
+    services = Services()
+    folder_id = os.getenv("FOLDER_ID")
 
-    # Initialize Drive and Sheets services
-    builder = ServicesBuilder(credentials)
-    drive_service = builder.build(ServiceType.Drive)
-    sheets_service = builder.build(ServiceType.Sheets)
-
-    # Find or create Google Sheet
-    sheet_id = find_file(drive_service, FOLDER_ID, file_name)
-    if not sheet_id:
-        sheet_id = create_google_sheet(drive_service, FOLDER_ID, file_name)
-
-    # Read data from a csv file at the given path and convert it to a list of lists
-    path = args.path
-    with open(path) as f:
-        dummy_data = list(csv.reader(f))
-        logger.info(dummy_data)
-
-    # Upload data to the sheet
-    upload_data_to_sheet(sheets_service, sheet_id, dummy_data)
+    upload_file(services, folder_id, file)
     logger.info("Data upload complete.")
 
 
