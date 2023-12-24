@@ -8,7 +8,8 @@ from rich.traceback import install as install_rich_traceback
 
 from gpush.auth import authenticate_service_account
 from gpush.auth.services import ServicesBuilder, ServiceType
-from gpush.request import create_google_sheet, find_file, upload_data_to_sheet
+from gpush.requests.gdrive import create_google_sheet, find_file
+from gpush.requests.gsheets import upload_data_to_sheet
 
 # Set up logging and error handling
 install_rich_traceback()
