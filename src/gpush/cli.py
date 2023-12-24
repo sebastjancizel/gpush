@@ -1,60 +1,29 @@
-"""
-This is a skeleton file that can serve as a starting point for a Python
-console script. To run this script uncomment the following lines in the
-``[options.entry_points]`` section in ``setup.cfg``::
-
-    console_scripts =
-         fibonacci = gpush.skeleton:run
-
-Then run ``pip install .`` (or ``pip install -e .`` for editable mode)
-which will install the command ``fibonacci`` inside your current environment.
-
-Besides console scripts, the header (i.e. until ``_logger``...) of this file can
-also be used as template for Python modules.
-
-Note:
-    This file can be renamed depending on your needs or safely removed if not needed.
-
-References:
-    - https://setuptools.pypa.io/en/latest/userguide/entry_point.html
-    - https://pip.pypa.io/en/stable/reference/pip_install
-"""
-
-import argparse
 import logging
-import sys
+import os
 
+from rich.logging import RichHandler
+from rich.traceback import install as install_rich_traceback
+
+from gpush.auth import authenticate_service_account
+from gpush.auth.services import ServicesBuilder, ServiceType
+from gpush.request import (
+    find_file,
+    create_google_sheet,
+    upload_data_to_sheet,
+)
 from gpush import __version__
 
-__author__ = "Sebastjan Cizel"
-__copyright__ = "Sebastjan Cizel"
-__license__ = "MIT"
+# Set up logging and error handling
+install_rich_traceback()
+logging.basicConfig(
+    level="INFO", format="%(message)s", datefmt="[%X]", handlers=[RichHandler()]
+)
 
-_logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
-
-# ---- Python API ----
-# The functions defined in this section can be imported by users in their
-# Python scripts/interactive interpreter, e.g. via
-# `from gpush.skeleton import fib`,
-# when using this Python module as a library.
-
-
-def fib(n):
-    """Fibonacci example function
-
-    Args:
-      n (int): integer
-
-    Returns:
-      int: n-th Fibonacci number
-    """
-    assert n > 0
-    a, b = 1, 1
-    for _i in range(n - 1):
-        a, b = b, a + b
-    return a
-
+# Global Variables
+SERVICE_ACCOUNT_FILE = os.getenv("SERVICE_ACCOUNT_FILE")
+FOLDER_ID = os.getenv("FOLDER_ID")
 
 # ---- CLI ----
 # The functions defined in this section are wrappers around the main Python
@@ -62,88 +31,40 @@ def fib(n):
 # executable/script.
 
 
-def parse_args(args):
-    """Parse command line parameters
+def main(service_account_file, folder_id):
+    """Main function to handle the Google Sheets operations."""
+    scopes = [
+        "https://www.googleapis.com/auth/drive",
+        "https://www.googleapis.com/auth/spreadsheets",
+    ]
+    # Authenticate the service account
+    credentials = authenticate_service_account(service_account_file, scopes)
 
-    Args:
-      args (List[str]): command line parameters as list of strings
-          (for example  ``["--help"]``).
+    # Initialize Drive and Sheets services
+    builder = ServicesBuilder(credentials)
+    drive_service = builder.build(ServiceType.Drive)
+    sheets_service = builder.build(ServiceType.Sheets)
 
-    Returns:
-      :obj:`argparse.Namespace`: command line parameters namespace
-    """
-    parser = argparse.ArgumentParser(description="Just a Fibonacci demonstration")
-    parser.add_argument(
-        "--version",
-        action="version",
-        version=f"gpush {__version__}",
-    )
-    parser.add_argument(dest="n", help="n-th Fibonacci number", type=int, metavar="INT")
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        dest="loglevel",
-        help="set loglevel to INFO",
-        action="store_const",
-        const=logging.INFO,
-    )
-    parser.add_argument(
-        "-vv",
-        "--very-verbose",
-        dest="loglevel",
-        help="set loglevel to DEBUG",
-        action="store_const",
-        const=logging.DEBUG,
-    )
-    return parser.parse_args(args)
+    # File details
+    file_name = "hello2"  # Name of the Google Sheets file
 
+    # Find or create Google Sheet
+    sheet_id = find_file(drive_service, folder_id, file_name)
+    if not sheet_id:
+        sheet_id = create_google_sheet(drive_service, folder_id, file_name)
 
-def setup_logging(loglevel):
-    """Setup basic logging
+    # Dummy data to upload
+    dummy_data = [
+        ["Name", "Age", "City"],
+        ["Rachel", 30, "New York"],
+        ["Bob", 25, "Maribor"],
+        ["Charlie", 35, "London"],
+    ]
 
-    Args:
-      loglevel (int): minimum loglevel for emitting messages
-    """
-    logformat = "[%(asctime)s] %(levelname)s:%(name)s:%(message)s"
-    logging.basicConfig(
-        level=loglevel, stream=sys.stdout, format=logformat, datefmt="%Y-%m-%d %H:%M:%S"
-    )
-
-
-def main(args):
-    """Wrapper allowing :func:`fib` to be called with string arguments in a CLI fashion
-
-    Instead of returning the value from :func:`fib`, it prints the result to the
-    ``stdout`` in a nicely formatted message.
-
-    Args:
-      args (List[str]): command line parameters as list of strings
-          (for example  ``["--verbose", "42"]``).
-    """
-    args = parse_args(args)
-    setup_logging(args.loglevel)
-    _logger.debug("Starting crazy calculations...")
-    print(f"The {args.n}-th Fibonacci number is {fib(args.n)}")
-    _logger.info("Script ends here")
-
-
-def run():
-    """Calls :func:`main` passing the CLI arguments extracted from :obj:`sys.argv`
-
-    This function can be used as entry point to create console scripts with setuptools.
-    """
-    main(sys.argv[1:])
+    # Upload data to the sheet
+    upload_data_to_sheet(sheets_service, sheet_id, dummy_data)
+    logger.info("Data upload complete.")
 
 
 if __name__ == "__main__":
-    # ^  This is a guard statement that will prevent the following code from
-    #    being executed in the case someone imports this file instead of
-    #    executing it as a script.
-    #    https://docs.python.org/3/library/__main__.html
-
-    # After installing your project with pip, users can also run your Python
-    # modules as scripts via the ``-m`` flag, as defined in PEP 338::
-    #
-    #     python -m gpush.skeleton 42
-    #
-    run()
+    main(SERVICE_ACCOUNT_FILE, FOLDER_ID)
