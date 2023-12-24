@@ -1,7 +1,7 @@
 import logging
 from typing import Optional
 
-from googleapiclient.discovery import Resource
+from googleapiclient.discovery import Resource  # type: ignore
 
 from .utilities import error_handler
 

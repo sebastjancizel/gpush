@@ -2,7 +2,7 @@ import logging
 from contextlib import contextmanager
 from typing import Any, Generator, Optional
 
-from googleapiclient.discovery import build
+from googleapiclient.discovery import build  # type: ignore
 
 from gpush.auth.authenticator import authenticate_service_account
 

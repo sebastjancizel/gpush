@@ -2,7 +2,7 @@ import logging
 import os
 from typing import Optional
 
-from google.oauth2.service_account import Credentials
+from google.oauth2.service_account import Credentials  # type: ignore
 
 logger = logging.getLogger(__name__)
 

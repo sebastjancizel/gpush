@@ -1,13 +1,13 @@
 import logging
 import os
-from argparse import ArgumentParser, Namespace
+from argparse import ArgumentParser
 from dataclasses import dataclass
 
 from rich.logging import RichHandler
 from rich.traceback import install as install_rich_traceback
 
 from gpush.auth.services import Services
-from gpush.handlers import Ext, upload_file
+from gpush.handlers import Extension, upload_file
 
 # Set up logging and error handling
 install_rich_traceback()
@@ -28,10 +28,10 @@ class FileDetails:
     path: str
     name: str
     sheet: str
-    ext: Ext
+    ext: Extension
 
 
-def parse_args() -> Namespace:
+def parse_args() -> FileDetails:
     parser = ArgumentParser(
         prog="gpush",
         description="A CLI tool to upload data to Google Sheets.",
@@ -68,7 +68,7 @@ def parse_args() -> Namespace:
     file = FileDetails(
         path=args.path,
         name=args.name or base,
-        ext=Ext.from_string(ext),
+        ext=Extension.from_string(ext),
         sheet=args.sheet,
     )
 
