@@ -1,9 +1,10 @@
+import logging
 import os
 from argparse import ArgumentParser
 
 from gpush import logger
 from gpush.auth.services import Services
-from gpush.handlers.upload import Extension, FileDetails, upload_file
+from gpush.handlers.upload import FileDetails, upload_file
 
 # ---- CLI ----
 # The functions defined in this section are wrappers around the main Python
@@ -18,11 +19,10 @@ def parse_args() -> FileDetails:
     )
 
     parser.add_argument(
-        "--path",
-        "-p",
+        "path",
         type=str,
         help="Path to the file to be uploaded.",
-        required=True,
+        default=None,
     )
 
     parser.add_argument(
@@ -42,15 +42,18 @@ def parse_args() -> FileDetails:
         default="Sheet1",  # Default sheet name
     )
 
-    args = parser.parse_args()
-    base, ext = os.path.splitext(os.path.basename(args.path))
-
-    file = FileDetails(
-        path=args.path,
-        name=args.name or base,
-        ext=Extension.from_string(ext),
-        sheet=args.sheet,
+    parser.add_argument(
+        "--verbose",
+        "-v",
+        action="store_true",
+        help="Enable verbose logging.",
+        required=False,
     )
+
+    args = parser.parse_args()
+    logger.setLevel(logging.DEBUG) if args.verbose else logger.setLevel(logging.INFO)
+
+    file = FileDetails.from_args(args)
 
     return file
 
