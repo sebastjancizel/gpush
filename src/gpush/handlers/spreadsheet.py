@@ -32,12 +32,13 @@ def spreadsheet_handler(
         )
 
     with open(file.path) as f:
-        dummy_data = list(csv.reader(f))
+        data = list(csv.reader(f))
 
     # Upload data to the sheet
     upload_data_to_spreadsheet(
         services.sheets,
         file_id,
-        dummy_data,
+        file.name,
+        data,
         sheet=file.sheet,
     )

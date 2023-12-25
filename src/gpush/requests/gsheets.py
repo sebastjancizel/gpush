@@ -44,6 +44,7 @@ def check_or_create_sheet(
 def upload_data_to_spreadsheet(
     sheets_service: Resource,
     spreadsheet_id: str,
+    name: str,
     data: List[List[Any]],
     sheet: Optional[str] = "Sheet1",
 ) -> None:
@@ -77,7 +78,7 @@ def upload_data_to_spreadsheet(
         .values()
         .update(
             spreadsheetId=spreadsheet_id,
-            range=sheet,  # range means a sheet in this case
+            range=sheet,  # simplifying assumption: range is the same as sheet name
             valueInputOption="RAW",
             body=body,
         )
@@ -85,4 +86,4 @@ def upload_data_to_spreadsheet(
     )
     logger.debug(f"{result.get('updatedCells')} cells updated.")
     sheet_url = f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/"
-    logger.info(f"Uploaded data to {sheet_url}.")
+    logger.info(f"Uploaded {name} to {sheet_url}.")

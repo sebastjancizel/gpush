@@ -52,6 +52,11 @@ repos:
     hooks:
       - id: black
         language_version: python3
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0 # Use the desired mypy version
+    hooks:
+      - id: mypy
+        additional_dependencies: [types-requests]
 ## If like to embrace black styles even in the docs:
 # - repo: https://github.com/asottile/blacken-docs
 #   rev: v1.13.0
