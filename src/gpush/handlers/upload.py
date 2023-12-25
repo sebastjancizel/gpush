@@ -75,6 +75,23 @@ def dir_handler(services: Services, folder_id: str, file: FileDetails) -> None:
 
 
 def upload_file(services: Services, folder_id: str, file: FileDetails) -> None:
+    """
+    Upload a file to Google Drive.
+
+    This function uploads a file to Google Drive, given its details and the ID of the folder where it should be uploaded.
+    The type of the file is determined by the `type` attribute of the `file` parameter, and different handlers are used
+    to upload the file based on its type. If the file is a CSV, XLSX, or XLS file, the `spreadsheet_handler` is used.
+    If the file is a directory, the `dir_handler` is used. For all other file types, the `generic_handler` is used.
+
+    Args:
+        services (Services): The services needed to interact with Google APIs.
+        folder_id (str): The ID of the folder where the file should be uploaded.
+        file (FileDetails): The details of the file to be uploaded, including its path, name, type,
+                            and an optional sheet specification (only relevant) for spreadsheet uploads.
+
+    Raises:
+        Exception: If the file type is not recognized or if there is an error during the upload process.
+    """
     match file.type:
         case UploadType.CSV | UploadType.XLSX | UploadType.XLS:
             spreadsheet_handler(services, folder_id, file)
