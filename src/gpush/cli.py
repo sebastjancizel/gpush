@@ -1,13 +1,12 @@
 import logging
 import os
 from argparse import ArgumentParser
-from dataclasses import dataclass
 
 from rich.logging import RichHandler
 from rich.traceback import install as install_rich_traceback
 
 from gpush.auth.services import Services
-from gpush.handlers import Extension, upload_file
+from gpush.handlers import Extension, FileDetails, upload_file
 
 # Set up logging and error handling
 install_rich_traceback()
@@ -21,14 +20,6 @@ logger = logging.getLogger(__name__)
 # The functions defined in this section are wrappers around the main Python
 # API allowing them to be called directly from the terminal as a CLI
 # executable/script.
-
-
-@dataclass
-class FileDetails:
-    path: str
-    name: str
-    sheet: str
-    ext: Extension
 
 
 def parse_args() -> FileDetails:

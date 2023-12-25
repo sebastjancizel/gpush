@@ -3,7 +3,7 @@ from typing import Any, List, Optional
 
 from googleapiclient.discovery import Resource  # type: ignore
 
-from .utilities import error_handler
+from gpush.requests.utilities import error_handler
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +45,7 @@ def upload_data_to_spreadsheet(
     sheets_service: Resource,
     spreadsheet_id: str,
     data: List[List[Any]],
-    sheet: Optional[str] = "Sheet2",
+    sheet: Optional[str] = "Sheet1",
 ) -> None:
     """
     Upload data to the specified Google Sheet.
@@ -85,4 +85,4 @@ def upload_data_to_spreadsheet(
     )
     logger.debug(f"{result.get('updatedCells')} cells updated.")
     sheet_url = f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/"
-    logger.info(f"Google Sheet can be found at: {sheet_url}")
+    logger.info(f"Uploaded data to {sheet_url}.")
