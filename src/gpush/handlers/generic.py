@@ -49,6 +49,4 @@ def generic_handler(
     file_url = f"https://drive.google.com/file/d/{file_id}/view"
 
     # Log the file name, ID, and URL
-    logger.info(
-        f"File '{name}' uploaded successfully. File ID: {file_id}. Access URL: {file_url}"
-    )
+    logger.info(f"File '{name}' uploaded; URL: {file_url}")

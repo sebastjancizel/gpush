@@ -127,7 +127,9 @@ def create_drive_folder(
 
     if files:
         folder_id = files[0].get("id")
-        logger.debug(f"Folder '{folder_name}' already exists with ID: {folder_id}")
+        logger.warning(
+            f"Folder '{folder_name}' already exists. Continuing with upload but some files may be overwritten."
+        )
         return folder_id
 
     # Folder does not exist, create a new one
