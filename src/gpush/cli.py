@@ -1,20 +1,9 @@
-import logging
 import os
 from argparse import ArgumentParser
 
-from rich.logging import RichHandler
-from rich.traceback import install as install_rich_traceback
-
+from gpush import logger
 from gpush.auth.services import Services
-from gpush.handlers import Extension, FileDetails, upload_file
-
-# Set up logging and error handling
-install_rich_traceback()
-logging.basicConfig(
-    level="INFO", format="%(message)s", datefmt="[%X]", handlers=[RichHandler()]
-)
-
-logger = logging.getLogger(__name__)
+from gpush.handlers.upload import Extension, FileDetails, upload_file
 
 # ---- CLI ----
 # The functions defined in this section are wrappers around the main Python
@@ -66,12 +55,15 @@ def parse_args() -> FileDetails:
     return file
 
 
-def main():
+def main() -> None:
     file = parse_args()
     logger.info(f"Uploading {file.path} to Google Drive/Sheets as {file.name}...")
 
     services = Services()
     folder_id = os.getenv("FOLDER_ID")
+
+    if folder_id is None:
+        raise ValueError("FOLDER_ID environment variable is not set.")
 
     upload_file(services, folder_id, file)
     logger.info("Data upload complete.")

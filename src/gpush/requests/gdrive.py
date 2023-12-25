@@ -43,7 +43,7 @@ def find_file(
 
     for file in files:
         if file.get("name") == file_name:
-            logger.info(f"File found with ID: {file.get('id')}")
+            logger.debug(f"File found with ID: {file.get('id')}")
             return file.get("id")
     return None
 
@@ -88,3 +88,56 @@ def create_google_sheet(
     logger.info(f"Created new Google Sheets File ID: {file.get('id')}")
 
     return file.get("id")
+
+
+@error_handler
+def create_drive_folder(
+    drive_service: Resource,
+    folder_name: str,
+    parent_folder_id: str,
+) -> str:
+    """
+    Create or find a folder within a specific Google Drive folder.
+
+    This function creates a new folder with the given name within the specified parent folder
+    on Google Drive. If a folder with the same name already exists in the parent folder,
+    it returns the ID of the existing folder. Otherwise, it creates a new folder and
+    returns its ID.
+
+    Args:
+        drive_service (Resource): The Google Drive API service instance.
+        folder_name (str): The name of the folder to be created or found.
+        parent_folder_id (str): The ID of the parent folder where the folder will be created or searched.
+
+    Returns:
+        str: The ID of the created or found folder.
+
+    Raises:
+        GoogleApiAccessError: If any error occurs during the API request.
+    """
+
+    # Check if the folder already exists
+    query = f"name='{folder_name}' and mimeType='application/vnd.google-apps.folder' and '{parent_folder_id}' in parents and trashed = false"
+    response = (
+        drive_service.files()
+        .list(q=query, spaces="drive", fields="files(id, name)")
+        .execute()
+    )
+    files = response.get("files", [])
+
+    if files:
+        folder_id = files[0].get("id")
+        logger.debug(f"Folder '{folder_name}' already exists with ID: {folder_id}")
+        return folder_id
+
+    # Folder does not exist, create a new one
+    file_metadata = {
+        "name": folder_name,
+        "mimeType": "application/vnd.google-apps.folder",
+        "parents": [parent_folder_id],
+    }
+    folder = drive_service.files().create(body=file_metadata, fields="id").execute()
+    folder_id = folder.get("id")
+    logger.debug(f"Created new folder '{folder_name}' with ID: {folder_id}")
+
+    return folder_id
