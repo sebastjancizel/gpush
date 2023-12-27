@@ -14,6 +14,11 @@ from .spreadsheet import spreadsheet_handler
 
 
 class UploadType(Enum):
+    """
+    An enumeration of the different types of inputs that are supported by gpush. The types
+    are used to determine which handler should be used to upload the file.
+    """
+
     CSV = ".csv"
     XLSX = ".xlsx"
     XLS = ".xls"
@@ -22,7 +27,9 @@ class UploadType(Enum):
 
     @staticmethod
     def from_path(path: str) -> UploadType:
-        # get base and extension of file
+        """
+        Parse the path string to determine the type of the file.
+        """
         _, ext = os.path.splitext(os.path.basename(path))
 
         match ext:
@@ -60,7 +67,7 @@ def dir_handler(services: Services, folder_id: str, file: FileDetails) -> None:
     new_folder_id = create_drive_folder(services.drive, file.name, folder_id)
 
     for f in os.listdir(file.path):
-        logger.info(f"Uploading {f}...")
+        logger.debug(f"Uploading {f}...")
         new_path = os.path.join(file.path, f)
 
         new_file = FileDetails(
@@ -93,7 +100,7 @@ def upload_file(services: Services, folder_id: str, file: FileDetails) -> None:
         Exception: If the file type is not recognized or if there is an error during the upload process.
     """
     match file.type:
-        case UploadType.CSV | UploadType.XLSX | UploadType.XLS:
+        case UploadType.CSV:
             spreadsheet_handler(services, folder_id, file)
         case UploadType.DIR:
             dir_handler(services, folder_id, file)

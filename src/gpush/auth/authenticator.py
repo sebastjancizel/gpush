@@ -18,7 +18,11 @@ def _read_service_account_file() -> str:
     service_account_file = os.getenv("SERVICE_ACCOUNT_FILE")
 
     if not service_account_file:
-        raise MissingServiceAccountFile()
+        raise MissingServiceAccountFile(
+            "Unable to locate service account file. "
+            "gpush looks for the file path in the SERVICE_ACCOUNT_FILE environment variable; "
+            "please ensure that it is set to a valid path."
+        )
     return service_account_file
 
 

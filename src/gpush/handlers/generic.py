@@ -22,13 +22,11 @@ def generic_handler(
     name = file.name
     path = file.path
 
-    # Determine the MIME type of the file
     mime_type, _ = mimetypes.guess_type(path)
     if mime_type is None:
         # Fallback MIME type or handling if MIME type cannot be determined
         mime_type = "application/octet-stream"
 
-    # Check if the file exists
     if find_file(services.drive, folder_id, name):
         logger.warning(f"File {name} already exists in the folder.")
 
@@ -42,7 +40,6 @@ def generic_handler(
         .execute()
     )
 
-    # Retrieve the file ID from the upload result
     file_id = result.get("id")
 
     # Construct the URL to access the file on Google Drive
