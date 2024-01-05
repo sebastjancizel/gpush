@@ -1,1 +1,0 @@
-from .authenticator import authenticate_service_account
